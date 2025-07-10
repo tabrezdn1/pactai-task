@@ -1,72 +1,90 @@
 # EHR Resource Dashboard
 
-This project is a modern dashboard for viewing and managing electronic health record (EHR) resources. It’s built with Next.js, shadcn/ui, and TanStack Table, and is designed to be both practical and easy to extend.
-
-## What’s Inside?
-- **Live, interactive table** of EHR resources (mock data, but easy to connect to a real API)
-- **Search and sort** across all columns
-- **Modern UI** with shadcn/ui components (cards, badges, tooltips, etc.)
-- **Responsive and compact**—works great on desktop and mobile
-- **Tooltips** for long text, so you never lose important info
-
-## Why This Stack?
-- **Next.js**: Fast, flexible, and easy to deploy. Great for React projects.
-- **shadcn/ui**: Clean, accessible React components that look good out of the box.
-- **TanStack Table**: The best way to build powerful, flexible tables in React.
-- **TypeScript**: Type safety for fewer bugs and better code completion.
-
-## Getting Started
-1. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-2. **Start the dev server:**
-   ```bash
-   npm run dev
-   ```
-3. **Open your browser:**
-   Go to [http://localhost:3000](http://localhost:3000)
-
-## How It Works
-- The main page (`src/app/page.tsx`) shows summary cards and the resource table.
-- The table (`src/components/ResourceTable.tsx`) uses TanStack Table for sorting and shadcn/ui for all UI elements.
-- Data comes from a mock API (see `src/lib/api.ts`), but you can easily swap in your own endpoint.
-- Searching is instant and works across all major fields.
-- Long descriptions and AI summaries are truncated, but you can hover to see the full text.
-
-## Customization
-- Want to use your own data? Update the API URL in `src/lib/api.ts`.
-- Need more columns or features? The table is easy to extend—just update the columns array.
-- Want dark mode or more theming? shadcn/ui and Tailwind make it simple.
-
-## File Structure (Key Parts)
-```
-src/
-  app/
-    page.tsx         # Main dashboard page
-  components/
-    ResourceTable.tsx # Table UI and logic
-    ui/               # shadcn/ui components
-  lib/
-    api.ts           # Data fetching and transformation
-  hooks/
-    useResourceData.ts # Data fetching hook
-  types/
-    resource.ts      # TypeScript types
-```
-
-## Example Data
-The mock data simulates real EHR resources: blood pressure readings, prescriptions, allergies, lab results, and more. Each row is a `ResourceWrapper` object, so you can plug in real data with the same shape.
-
-## Want to Extend It?
-- Add pagination or filtering
-- Connect to a real backend
-- Add authentication
-- Build charts or analytics
-
-## License
-MIT
+A simple, fast dashboard for browsing electronic-health-record (EHR) resources. Built with **Next.js 15**, **TypeScript**, and a handful of small, modern libraries.
 
 ---
 
-If you have questions or want to contribute, feel free to open an issue or PR. Enjoy building!
+## What’s new?
+
+* **Large-data support** – the table can show **up to 1 million rows** thanks to virtual scrolling.
+* **Real progress bar** – a tiny `ProgressBar` component tells you how much of the data has loaded.
+* **Status badges** – every resource shows a clear state: *Completed*, *Processing*, *Failed*, or *Not Started*.
+* **Mock API route** – `GET /api/resources?count=123` returns fake but realistic data so you can test right away.
+* **Full test suite** – Jest + React Testing-Library cover the table, the progress bar, and key edge cases (over 60 % coverage).
+* **One-command CI build** – `npm run test:ci` runs the tests with `NODE_ENV=test` so it works both locally and on Vercel.
+
+---
+
+## Quick start
+
+```bash
+# 1. Install
+npm install
+
+# 2. Start the dev server
+npm run dev
+
+# 3. Open your browser
+http://localhost:3000
+```
+
+---
+
+## Main features
+
+| Feature | Where to look |
+|---------|---------------|
+| Interactive table (sort, search, paginate) | `src/components/ResourceTable.tsx` |
+| Progress bar while loading | `src/components/ui/progress.tsx` |
+| Mock data + API route | `src/lib/api.ts`, `src/app/api/resources/route.ts` |
+| Strong types for every field | `src/types/resource.ts` |
+| Unit tests | `src/__tests__/` |
+
+---
+
+## Scripts
+
+| Command | What it does |
+|---------|-------------|
+| `npm run dev` | Start Next.js in development mode |
+| `npm run test` | Run tests once (sets `NODE_ENV=test`) |
+| `npm run test:watch` | Watch mode |
+| `npm run test:ci` | Tests + coverage, used in CI |
+| `npm run build` | Run tests first, then create the production build |
+
+---
+
+## Folder map (short version)
+
+```text
+src/
+  app/
+    page.tsx            – dashboard page
+    api/resources/      – mock REST endpoint
+  components/
+    ResourceTable.tsx   – the big table
+    ui/                 – small reusable UI parts
+  data/                 – sample data used in storybook/tests
+  hooks/                – custom React hooks
+  lib/                  – api helpers & utilities
+  types/                – TypeScript models
+  __tests__/            – Jest tests
+```
+
+---
+
+## Customising
+
+1. **Use real data** – replace the fetch in `src/lib/api.ts` with your endpoint.
+2. **Change columns** – edit the `columns` array inside `ResourceTable.tsx`.
+3. **Restyle** – components come from shadcn/ui + Tailwind, so you can tweak classes freely.
+
+---
+
+## License
+
+MIT – do whatever you like.
+
+---
+
+*Have fun building!*
