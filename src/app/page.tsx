@@ -51,58 +51,58 @@ export default function Home() {
         </div>
 
         {/* Compact Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
-          <Card className="relative overflow-hidden border-0 shadow-md bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
-            <CardContent className="p-3">
-              <div className="flex items-center justify-between">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mb-2">
+          <Card className="relative overflow-hidden border-0 shadow-sm bg-gradient-to-br from-emerald-500 to-emerald-600 text-white py-3">
+            <CardContent className="p-2">
+              <div className="flex items-center justify-between gap-2">
                 <div>
-                  <p className="text-emerald-100 text-xs font-medium">Completed</p>
-                  <p className="text-xl font-bold">{statusCounts.completed}</p>
+                  <p className="text-emerald-100 text-[10px] font-medium leading-none">Completed</p>
+                  <p className="text-lg font-bold leading-tight">{statusCounts.completed}</p>
                 </div>
-                <div className="h-6 w-6 bg-white/20 rounded-lg flex items-center justify-center">
+                <div className="h-5 w-5 bg-white/20 rounded-lg flex items-center justify-center">
                   <CheckCircle2 className="h-3 w-3" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="relative overflow-hidden border-0 shadow-md bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-            <CardContent className="p-3">
-              <div className="flex items-center justify-between">
+          <Card className="relative overflow-hidden border-0 shadow-sm bg-gradient-to-br from-blue-500 to-blue-600 text-white py-3">
+            <CardContent className="p-2">
+              <div className="flex items-center justify-between gap-2">
                 <div>
-                  <p className="text-blue-100 text-xs font-medium">Processing</p>
-                  <p className="text-2xl font-bold">{statusCounts.processing}</p>
+                  <p className="text-blue-100 text-[10px] font-medium leading-none">Processing</p>
+                  <p className="text-lg font-bold leading-tight">{statusCounts.processing}</p>
                 </div>
-                <div className="h-8 w-8 bg-white/20 rounded-lg flex items-center justify-center">
-                  <RefreshCw className="h-4 w-4 animate-spin" />
+                <div className="h-5 w-5 bg-white/20 rounded-lg flex items-center justify-center">
+                  <RefreshCw className="h-3.5 w-3.5 animate-spin" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="relative overflow-hidden border-0 shadow-md bg-gradient-to-br from-red-500 to-red-600 text-white">
-            <CardContent className="p-3">
-              <div className="flex items-center justify-between">
+          <Card className="relative overflow-hidden border-0 shadow-sm bg-gradient-to-br from-red-500 to-red-600 text-white py-3">
+            <CardContent className="p-2">
+              <div className="flex items-center justify-between gap-2">
                 <div>
-                  <p className="text-red-100 text-xs font-medium">Failed</p>
-                  <p className="text-2xl font-bold">{statusCounts.failed}</p>
+                  <p className="text-red-100 text-[10px] font-medium leading-none">Failed</p>
+                  <p className="text-lg font-bold leading-tight">{statusCounts.failed}</p>
                 </div>
-                <div className="h-8 w-8 bg-white/20 rounded-lg flex items-center justify-center">
-                  <XCircle className="h-4 w-4" />
+                <div className="h-5 w-5 bg-white/20 rounded-lg flex items-center justify-center">
+                  <XCircle className="h-3 w-3" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="relative overflow-hidden border-0 shadow-md bg-gradient-to-br from-gray-500 to-gray-600 text-white">
-            <CardContent className="p-3">
-              <div className="flex items-center justify-between">
+          <Card className="relative overflow-hidden border-0 shadow-sm bg-gradient-to-br from-gray-500 to-gray-600 text-white py-3">
+            <CardContent className="p-2">
+              <div className="flex items-center justify-between gap-2">
                 <div>
-                  <p className="text-gray-100 text-xs font-medium">Pending</p>
-                  <p className="text-2xl font-bold">{statusCounts.notStarted}</p>
+                  <p className="text-gray-100 text-[10px] font-medium leading-none">Pending</p>
+                  <p className="text-lg font-bold leading-tight">{statusCounts.notStarted}</p>
                 </div>
-                <div className="h-8 w-8 bg-white/20 rounded-lg flex items-center justify-center">
-                  <Clock className="h-4 w-4" />
+                <div className="h-5 w-5 bg-white/20 rounded-lg flex items-center justify-center">
+                  <Clock className="h-3 w-3" />
                 </div>
               </div>
             </CardContent>
