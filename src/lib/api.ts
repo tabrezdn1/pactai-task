@@ -1,4 +1,5 @@
 import { ResourceWrapper, ProcessingState, FHIRVersion } from "@/types/resource";
+import { faker } from "@faker-js/faker";
 
 export interface ApiResponse<T> {
   data: T;
@@ -11,15 +12,8 @@ export interface ApiError {
   status?: number;
 }
 
-interface JsonPlaceholderPost {
-  userId: number;
-  id: number;
-  title: string;
-  body: string;
-}
-
-// Mock API endpoints - you can replace these with your actual API URLs
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://jsonplaceholder.typicode.com';
+// Mock API endpoint constant kept for potential real API use
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
 
 // Realistic healthcare descriptions and AI summaries
 const healthcareDescriptions = [
@@ -77,41 +71,60 @@ class ApiService {
     }
   }
 
-  // For demo purposes, we'll transform JSONPlaceholder posts into ResourceWrapper format
-  async getResourceWrappers(): Promise<ApiResponse<ResourceWrapper[]>> {
+  /**
+   * Fetch mock ResourceWrapper data from the local Next.js API route.
+   * Falls back to client-side generation if the request fails (e.g., during
+   * Storybook or unit tests where the route handler isn’t available).
+   */
+  async getResourceWrappers(count: number = 1_000_000): Promise<ApiResponse<ResourceWrapper[]>> {
+    // Try hitting the mocked API route first
     try {
-      // Using JSONPlaceholder as a mock API
-      const response = await this.fetchWithErrorHandling<JsonPlaceholderPost[]>(`${API_BASE_URL}/posts`);
-      
-      // Transform the response into ResourceWrapper format
-      const resourceWrappers: ResourceWrapper[] = response.data.slice(0, 10).map((post, index) => ({
-        resource: {
-          metadata: {
-            state: this.getRandomProcessingState(),
-            createdTime: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
-            fetchTime: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000).toISOString(),
-            processedTime: Math.random() > 0.3 ? new Date(Date.now() - Math.random() * 12 * 60 * 60 * 1000).toISOString() : undefined,
-            identifier: {
-              key: `resource-${post.id}-${this.getRandomResourceType().toLowerCase()}`,
-              uid: `uid-${post.id}-${Math.random().toString(36).substr(2, 9)}`,
-              patientId: `patient-${Math.floor(Math.random() * 100) + 1}`,
-            },
-            resourceType: this.getRandomResourceType(),
-            version: this.getRandomFHIRVersion(),
-          },
-          humanReadableStr: healthcareDescriptions[index % healthcareDescriptions.length],
-          aiSummary: Math.random() > 0.3 ? aiSummaries[index % aiSummaries.length] : undefined,
-        },
-      }));
+      const res = await fetch(`/api/resources?count=${count}`);
+      if (res.ok) {
+        const data: ResourceWrapper[] = await res.json();
+        return { data, status: res.status };
+      }
+      // If the response isn’t OK, fall through to local generation
+      console.warn('Mock API responded with non-OK status, generating locally');
+    } catch (err) {
+      console.warn('Mock API not available, generating locally:', err);
+    }
+
+    // Fallback: generate synthetic EHR data using faker
+    const resourceWrappers: ResourceWrapper[] = Array.from({ length: count }).map(() => {
+      const resourceType = this.getRandomResourceType();
+      const state = this.getRandomProcessingState();
+      const maxPatientId = Math.max(100_000, Math.floor(count / 2));
 
       return {
-        data: resourceWrappers,
-        status: response.status,
-        message: 'Successfully fetched resource data',
+        resource: {
+          metadata: {
+            state,
+            createdTime: faker.date.recent({ days: 30 }).toISOString(),
+            fetchTime: faker.date.recent({ days: 7 }).toISOString(),
+            processedTime:
+              state === ProcessingState.PROCESSING_STATE_COMPLETED
+                ? faker.date.recent({ days: 3 }).toISOString()
+                : undefined,
+            identifier: {
+              key: faker.string.uuid(),
+              uid: faker.string.alphanumeric(12),
+              patientId: `patient-${faker.number.int({ min: 1, max: maxPatientId })}`,
+            },
+            resourceType,
+            version: this.getRandomFHIRVersion(),
+          },
+          humanReadableStr: faker.helpers.arrayElement(healthcareDescriptions),
+          aiSummary: faker.helpers.maybe(() => faker.helpers.arrayElement(aiSummaries), { probability: 0.6 }),
+        },
       };
-    } catch (error) {
-      throw error;
-    }
+    });
+
+    return {
+      data: resourceWrappers,
+      status: 200,
+      message: `Generated ${count.toLocaleString()} mock resources (local fallback)`,
+    };
   }
 
   // Method to post new resource data (for future use)

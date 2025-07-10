@@ -31,41 +31,41 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <main className="container mx-auto py-6 px-4 space-y-6">
+      <main className="container mx-auto py-2 px-4 flex flex-col min-h-screen">
         {/* Compact Header Section */}
-        <div className="text-center space-y-3">
+        <div className="text-center space-y-2 pb-2">
           <div className="inline-flex items-center space-x-2 px-3 py-1.5 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
             <Database className="h-3.5 w-3.5" />
             <span>Live Data Dashboard</span>
           </div>
           
-          <h1 className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent">
+          <h1 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent">
             EHR Resource Dashboard
           </h1>
           
-          <p className="text-base text-gray-600 max-w-xl mx-auto">
+          <p className="text-sm text-gray-600 max-w-lg mx-auto">
             Monitor and manage electronic health records with real-time processing status
           </p>
         </div>
 
         {/* Compact Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
           <Card className="relative overflow-hidden border-0 shadow-md bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
-            <CardContent className="p-4">
+            <CardContent className="p-3">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-emerald-100 text-xs font-medium">Completed</p>
-                  <p className="text-2xl font-bold">{statusCounts.completed}</p>
+                  <p className="text-xl font-bold">{statusCounts.completed}</p>
                 </div>
-                <div className="h-8 w-8 bg-white/20 rounded-lg flex items-center justify-center">
-                  <CheckCircle2 className="h-4 w-4" />
+                <div className="h-6 w-6 bg-white/20 rounded-lg flex items-center justify-center">
+                  <CheckCircle2 className="h-3 w-3" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card className="relative overflow-hidden border-0 shadow-md bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-            <CardContent className="p-4">
+            <CardContent className="p-3">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-blue-100 text-xs font-medium">Processing</p>
@@ -79,7 +79,7 @@ export default function Home() {
           </Card>
 
           <Card className="relative overflow-hidden border-0 shadow-md bg-gradient-to-br from-red-500 to-red-600 text-white">
-            <CardContent className="p-4">
+            <CardContent className="p-3">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-red-100 text-xs font-medium">Failed</p>
@@ -93,7 +93,7 @@ export default function Home() {
           </Card>
 
           <Card className="relative overflow-hidden border-0 shadow-md bg-gradient-to-br from-gray-500 to-gray-600 text-white">
-            <CardContent className="p-4">
+            <CardContent className="p-3">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-100 text-xs font-medium">Pending</p>
@@ -108,7 +108,7 @@ export default function Home() {
         </div>
 
         {/* Compact Quick Stats */}
-        <div className="flex flex-wrap gap-3 justify-center">
+        <div className="flex flex-wrap gap-3 justify-center mb-2 text-xs">
           <Badge variant="outline" className="px-3 py-1.5 text-xs">
             <Activity className="h-3 w-3 mr-1.5" />
             {data.length} Total Resources
@@ -124,19 +124,21 @@ export default function Home() {
         </div>
 
         {/* Main Table */}
-        <ResourceTable 
-          data={data} 
-          loading={loading} 
-          error={error} 
-          onRefresh={refetch}
-        />
+        <div className="flex-grow overflow-hidden">
+          <ResourceTable 
+            data={data} 
+            loading={loading} 
+            error={error} 
+            onRefresh={refetch}
+          />
+        </div>
 
         {/* Compact Footer */}
-        <div className="text-center py-4">
-          <p className="text-xs text-gray-500">
-            Powered by Next.js, TanStack Table, and shadcn/ui • Data from JSONPlaceholder API
+        <footer className="text-center py-2">
+          <p className="text-[10px] text-gray-400">
+            Powered by Next.js, TanStack Table, and shadcn/ui • Mock EHR data generated with Faker
           </p>
-        </div>
+        </footer>
       </main>
     </div>
   );

@@ -8,7 +8,8 @@ import {
   SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { ResourceWrapper, ProcessingState } from "@/types/resource";
 import {
   Table,
@@ -137,6 +138,23 @@ function TruncatedCell({ text }: { text: string }) {
 export function ResourceTable({ data, loading = false, error = null, onRefresh }: ResourceTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(0);
+  // Hold the user-entered page number (1-indexed for UX)
+  const [pageInput, setPageInput] = useState("1");
+  // Page size state with sensible default
+  const [pageSize, setPageSize] = useState(100);
+
+  // Keep the page input in sync whenever the active page changes
+  useEffect(() => {
+    setPageInput((page + 1).toString());
+  }, [page]);
+
+  // Scroll table back to top whenever the page changes
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.scrollTo({ top: 0 });
+    }
+  }, [page]);
 
   // Search logic only
   const filteredData = useMemo(() => {
@@ -159,6 +177,42 @@ export function ResourceTable({ data, loading = false, error = null, onRefresh }
     }
     return filtered;
   }, [data, search]);
+
+  // Reset to first page when search results change
+  useEffect(() => {
+    setPage(0);
+  }, [search, filteredData.length]);
+
+  // Reset to first page when pageSize changes
+  useEffect(() => {
+    setPage(0);
+  }, [pageSize]);
+
+  const pageCount = Math.max(1, Math.ceil(filteredData.length / pageSize));
+
+  // Available page-size options based on data size
+  const pageSizeOptions = useMemo(() => {
+    const bases = [25, 50, 100, 250, 500, 1000];
+    const opts = bases.filter((n) => n <= filteredData.length);
+    // Always include current pageSize and last page size if dataset smaller than min base
+    if (!opts.includes(pageSize)) opts.push(pageSize);
+    if (filteredData.length > 0 && !opts.includes(filteredData.length)) opts.push(filteredData.length);
+    return Array.from(new Set(opts)).sort((a, b) => a - b);
+  }, [filteredData.length, pageSize]);
+
+  const pageData = useMemo(
+    () => filteredData.slice(page * pageSize, page * pageSize + pageSize),
+    [filteredData, page, pageSize]
+  );
+
+  // Callback to jump to a specific page based on the pageInput value
+  const handleGoToPage = () => {
+    const num = parseInt(pageInput, 10);
+    if (!isNaN(num)) {
+      const target = Math.min(Math.max(num - 1, 0), pageCount - 1);
+      setPage(target);
+    }
+  };
 
   // Standard columns with sorting only
   const columns: ColumnDef<ResourceWrapper>[] = useMemo(() => [
@@ -324,7 +378,7 @@ export function ResourceTable({ data, loading = false, error = null, onRefresh }
   ], []);
 
   const table = useReactTable({
-    data: filteredData,
+    data: pageData,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -332,6 +386,15 @@ export function ResourceTable({ data, loading = false, error = null, onRefresh }
     state: {
       sorting,
     },
+  });
+
+  // Virtualizer setup
+  const containerRef = useRef<HTMLDivElement>(null);
+  const rowVirtualizer = useVirtualizer({
+    count: table.getRowModel().rows.length,
+    getScrollElement: () => containerRef.current,
+    estimateSize: () => 44,
+    overscan: 8,
   });
 
   if (error) {
@@ -404,8 +467,9 @@ export function ResourceTable({ data, loading = false, error = null, onRefresh }
               <TableSkeleton />
             </div>
           ) : (
-            <Table>
-              <TableHeader className="bg-gray-50/80">
+            <div ref={containerRef} className="max-h-[600px] overflow-y-auto">
+              <Table>
+                <TableHeader className="bg-gray-50/80">
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow key={headerGroup.id} className="hover:bg-gray-50/80">
                     {headerGroup.headers.map((header) => (
@@ -424,38 +488,102 @@ export function ResourceTable({ data, loading = false, error = null, onRefresh }
                   </TableRow>
                 ))}
               </TableHeader>
-              <TableBody>
-                {table.getRowModel().rows?.length ? (
-                  table.getRowModel().rows.map((row) => (
-                    <TableRow
-                      key={row.id}
-                      className="hover:bg-gray-50/50 transition-colors duration-150 border-gray-100"
-                      data-state={row.getIsSelected() && "selected"}
-                    >
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id} className="py-3">
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext()
-                          )}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={columns.length}
-                      className="h-16 text-center text-gray-500 text-sm"
-                    >
-                      No resource data available.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                {/* Virtualized body */}
+                <TableBody>
+                  {/* top spacer */}
+                  <tr style={{ height: rowVirtualizer.getVirtualItems()[0]?.start ?? 0 }} />
+
+                  {rowVirtualizer.getVirtualItems().map(virtualRow => {
+                    const row = table.getRowModel().rows[virtualRow.index];
+                    return (
+                      <TableRow
+                        key={row.id}
+                        className="hover:bg-gray-50/50 transition-colors duration-150 border-gray-100"
+                        data-state={row.getIsSelected() && "selected"}
+                        style={{ height: virtualRow.size }}
+                      >
+                        {row.getVisibleCells().map(cell => (
+                          <TableCell key={cell.id} className="py-3">
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    );
+                  })}
+
+                  {/* bottom spacer */}
+                  <tr
+                    style={{
+                      height:
+                        rowVirtualizer.getTotalSize() -
+                        (rowVirtualizer.getVirtualItems().at(-1)?.end ?? 0),
+                    }}
+                  />
+                </TableBody>
+              </Table>
+            </div>
           )}
         </div>
+        {/* Pagination / page-size controls */}
+        {!loading && filteredData.length > 0 && (
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-4 py-2 text-xs text-gray-600">
+            <span>
+              Page {page + 1} of {pageCount}
+            </span>
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Rows per page dropdown */}
+              <select
+                value={pageSize}
+                onChange={(e) => setPageSize(parseInt(e.target.value, 10))}
+                className="h-7 border rounded px-2 bg-white text-xs"
+              >
+                {pageSizeOptions.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt} / page
+                  </option>
+                ))}
+              </select>
+
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={page === 0}
+                onClick={() => setPage(prev => Math.max(prev - 1, 0))}
+              >
+                Prev
+              </Button>
+              {/* Direct page navigation */}
+              <Input
+                type="number"
+                min={1}
+                max={pageCount}
+                value={pageInput}
+                onChange={(e) => setPageInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleGoToPage();
+                  }
+                }}
+                className="w-24 h-7 text-center text-xs px-2"
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleGoToPage}
+              >
+                Go
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={page + 1 >= pageCount}
+                onClick={() => setPage(prev => Math.min(prev + 1, pageCount - 1))}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
