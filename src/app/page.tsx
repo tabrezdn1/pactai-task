@@ -2,6 +2,7 @@
 
 import { ResourceTable } from "@/components/ResourceTable";
 import { useResourceData } from "@/hooks/useResourceData";
+import { ProgressBar } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -16,7 +17,8 @@ import {
 } from "lucide-react";
 
 export default function Home() {
-  const { data, loading, error, refetch } = useResourceData();
+  // Default to fetching 100 records to keep initial payload small
+  const { data, loading, error, refetch, progress } = useResourceData(100);
 
   const getStatusCounts = () => {
     return {
@@ -123,13 +125,33 @@ export default function Home() {
           </Badge>
         </div>
 
+        {/* Load full dataset on demand */}
+        <div className="flex justify-center mb-4">
+          <button
+            className="inline-flex items-center px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium rounded-md disabled:opacity-50"
+            onClick={() => refetch(1_000_000)}
+            disabled={loading || data.length >= 1_000_000}
+          >
+            <Database className="h-3.5 w-3.5 mr-1" />
+            Load 1&nbsp;Million Records
+          </button>
+        </div>
+
+        {/* Progress bar for dataset fetch */}
+        {loading && (
+          <div className="mx-auto w-full max-w-lg mb-4 flex flex-col items-center gap-1">
+            <ProgressBar value={progress} />
+            <span className="text-[10px] text-gray-500">{Math.round(progress)}%</span>
+          </div>
+        )}
+
         {/* Main Table */}
         <div className="flex-grow overflow-hidden">
           <ResourceTable 
             data={data} 
             loading={loading} 
             error={error} 
-            onRefresh={refetch}
+            onRefresh={() => refetch()}
           />
         </div>
 

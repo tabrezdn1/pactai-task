@@ -76,27 +76,37 @@ class ApiService {
    * Falls back to client-side generation if the request fails (e.g., during
    * Storybook or unit tests where the route handler isn’t available).
    */
-  async getResourceWrappers(count: number = 1_000_000): Promise<ApiResponse<ResourceWrapper[]>> {
-    // Try hitting the mocked API route first
-    try {
-      const res = await fetch(`/api/resources?count=${count}`);
-      if (res.ok) {
-        const data: ResourceWrapper[] = await res.json();
-        return { data, status: res.status };
+  async getResourceWrappers(
+    count: number = 1_000_000,
+    onProgress?: (percent: number) => void
+  ): Promise<ApiResponse<ResourceWrapper[]>> {
+    // For smaller datasets (< 100k), try the mocked API route first; large ones are
+    // generated locally so we can display real-time progress.
+    if (count < 100_000) {
+      try {
+        const res = await fetch(`/api/resources?count=${count}`);
+        if (res.ok) {
+          const data: ResourceWrapper[] = await res.json();
+          if (onProgress) onProgress(100);
+          return { data, status: res.status };
+        }
+        // If the response isn’t OK, fall through to local generation
+        console.warn('Mock API responded with non-OK status, generating locally');
+      } catch (err) {
+        console.warn('Mock API not available, generating locally:', err);
       }
-      // If the response isn’t OK, fall through to local generation
-      console.warn('Mock API responded with non-OK status, generating locally');
-    } catch (err) {
-      console.warn('Mock API not available, generating locally:', err);
     }
 
-    // Fallback: generate synthetic EHR data using faker
-    const resourceWrappers: ResourceWrapper[] = Array.from({ length: count }).map(() => {
+    // Fallback: generate synthetic EHR data using faker and report progress
+    const resourceWrappers: ResourceWrapper[] = [];
+    const progressInterval = Math.max(1, Math.floor(count / 100)); // ~1% steps
+
+    for (let i = 0; i < count; i++) {
       const resourceType = this.getRandomResourceType();
       const state = this.getRandomProcessingState();
       const maxPatientId = Math.max(100_000, Math.floor(count / 2));
 
-      return {
+      resourceWrappers.push({
         resource: {
           metadata: {
             state,
@@ -117,8 +127,17 @@ class ApiService {
           humanReadableStr: faker.helpers.arrayElement(healthcareDescriptions),
           aiSummary: faker.helpers.maybe(() => faker.helpers.arrayElement(aiSummaries), { probability: 0.6 }),
         },
-      };
-    });
+      });
+
+      if (onProgress && i % progressInterval === 0) {
+        onProgress(Math.round((i / count) * 100));
+        // Yield to the event loop so React can paint progress updates
+        // eslint-disable-next-line no-await-in-loop
+        await new Promise((r) => setTimeout(r, 0));
+      }
+    }
+
+    if (onProgress) onProgress(100);
 
     return {
       data: resourceWrappers,
