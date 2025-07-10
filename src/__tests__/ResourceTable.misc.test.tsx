@@ -4,7 +4,6 @@ import userEvent from '@testing-library/user-event';
 import { ResourceTable } from '@/components/ResourceTable';
 import { sampleResourceData } from '@/data/sampleData';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 jest.mock('@tanstack/react-virtual', () => {
   return {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
